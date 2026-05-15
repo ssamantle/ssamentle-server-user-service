@@ -1,4 +1,4 @@
-package com.ssafy.ssamentle.user_service;
+package com.ssafy.ssamentle;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
