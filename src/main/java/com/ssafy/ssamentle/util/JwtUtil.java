@@ -6,17 +6,22 @@ import com.ssafy.ssamentle.error.exception.JwtHandler;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.sql.Date;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 
 @Slf4j
+@Getter
 @Component
 public class JwtUtil {
 
@@ -84,6 +89,16 @@ public class JwtUtil {
     }
 
     /**
+     * JWT 검증
+     * @param token Access Token
+     * @return isValidate
+     */
+    public boolean validateToken(String token) {
+
+        return false;
+    }
+
+    /**
      * JWT Claims 추출
      * @param accessToken
      * @return JWT Claims
@@ -104,6 +119,40 @@ public class JwtUtil {
             throw new JwtHandler(ResponseCode.JWT_UNSUPPORTED_TOKEN); // 지원하지 않는 토큰
         } catch (Exception e) {
             throw new JwtHandler(ResponseCode._INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // familyId == sessionId
+    public String generateFamilyId() {
+
+        byte[] bytes = new byte[16];
+        RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes); // 바이트 배열을 JWT 규격에 맞는 URL-safe Base64 문자열로 변환하는 코드
+    }
+
+    public String generateRefreshToken() {
+
+        byte[] bytes = new byte[64];
+        RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    /**
+     * Redis에 RefreshToken 원문이 아니라, SHA-256 해시값만 저장하기 위한 해시 변호나 메서드
+     * @param rawToken Refresh Token 평문
+     * @return Refresh Token을 해시로 변환
+     */
+    public String generateSHA256Token(String rawToken) {
+
+        try {
+
+            // SHA-256 해시 알고리즘 객체를 생성
+            // 입력 길이와 상관없이 항상 32바이트 결과를 출력
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] dig = md.digest(rawToken.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(dig);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }
