@@ -1,6 +1,5 @@
 package com.ssafy.ssamentle.error;
 
-import com.ssafy.ssamentle.common.ResponseCode;
 import lombok.Getter;
 
 /**

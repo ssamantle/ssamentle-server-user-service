@@ -1,4 +1,4 @@
-package com.ssafy.ssamentle.common;
+package com.ssafy.ssamentle.error;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,16 @@ public enum ResponseCode {
     _METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "405", "허용되지 않는 요청 방식입니다."),
 
     // User Error
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER404", "존재하지 않는 사용자입니다.");
+    USER_PASSWORD_MISMATCH(HttpStatus.UNAUTHORIZED, "USER401", "비밀번호가 일치하지 않습니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER404", "존재하지 않는 사용자입니다."),
+    USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER409", "이미 존재하는 사용자입니다."),
+
+    // JWT Error
+    JWT_INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "JWT401", "유효하지 않은 토큰입니다."),
+    JWT_EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "JWT4011", "만료된 토큰입니다."),
+    JWT_UNSUPPORTED_TOKEN(HttpStatus.UNAUTHORIZED, "JWT4012", "지원하지 않는 토큰입니다."),
+    JWT_MALFORMED_TOKEN(HttpStatus.UNAUTHORIZED, "JWT4013", "잘못된 형식의 토큰입니다."),
+    JWT_MISSING_TOKEN(HttpStatus.UNAUTHORIZED, "JWT4014", "토큰이 존재하지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code; // 클라이언트 식별용 코드 (예: "USER404"

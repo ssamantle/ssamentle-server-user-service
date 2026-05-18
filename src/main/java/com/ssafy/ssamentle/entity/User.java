@@ -1,11 +1,20 @@
 package com.ssafy.ssamentle.entity;
 
+import com.ssafy.ssamentle.dto.SignupRequestDto;
 import com.ssafy.ssamentle.entity.enums.UserRole;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "users")
 public class User extends BaseEntity {
 
@@ -21,7 +30,7 @@ public class User extends BaseEntity {
     @Column(name = "email", nullable = false, length = 45)
     private String email;
 
-    @Column(name = "password", nullable = false, length = 20)
+    @Column(name = "password", nullable = false, length = 60)
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -50,4 +59,17 @@ public class User extends BaseEntity {
     // 나이
     // 게임포인트
     // 게임 통계
+
+    public static User of(SignupRequestDto dto, String encodedPassword) {
+
+        return User.builder()
+                .nickname(dto.nickname())
+                .email(dto.email())
+                .password(encodedPassword)
+                .userRole(UserRole.USER)
+                .imageUrl(dto.imageUrl())
+                .status(true)
+                .inActiveDate(null)
+                .build();
+    }
 }
