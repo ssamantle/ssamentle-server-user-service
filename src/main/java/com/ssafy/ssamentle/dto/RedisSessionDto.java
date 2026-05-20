@@ -4,6 +4,7 @@ import lombok.Builder;
 
 @Builder
 public record RedisSessionDto(
+        String currentAccessJti,
         CustomUserInfoDto customUserInfoDto,
         String rtHash, // 현재 RT 해시
         String prevRtHash, // 이전 RT 해시

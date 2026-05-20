@@ -6,7 +6,7 @@ import lombok.Builder;
 public record LoginResponseDto(
         Long userId,
         String accessToken,
-        String refreshToken
-        // TODO: ,String sessionId // familyId
+        String refreshToken,
+        String familyId // sessionId
 ) {
 }

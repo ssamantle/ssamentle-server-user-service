@@ -19,6 +19,7 @@ import java.sql.Date;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.UUID;
 
 @Slf4j
 @Getter
@@ -57,9 +58,9 @@ public class JwtUtil {
      * @param user JWT 페이로드에 추가할 사용자 기본 정보
      * @return Access Token String
      */
-    public String createAccessToken(CustomUserInfoDto user) { return createToken(user, ACCESSTOKEN_EXP_TIME); }
+    public String createAccessToken(CustomUserInfoDto user, String jti, String familyId) { return createToken(user, jti, familyId, ACCESSTOKEN_EXP_TIME); }
 
-    private String createToken(CustomUserInfoDto user, long expireTime) {
+    private String createToken(CustomUserInfoDto user, String jti, String familyId, long expireTime) {
 
         // 1. JWT Payload를 만드는 코드
         // Claims는 JWT의 payload 영역을 의미. JWT 안에 사용자 정보를 넣는다.
@@ -69,13 +70,14 @@ public class JwtUtil {
         claims.put("email", user.email());
         claims.put("nickname", user.nickname());
         claims.put("userRole", user.userRole());
-        claims.put("sessionId", user.sessionId());
+        claims.put("familyId", familyId);
 
         Instant now = Instant.now();
         final Instant tokenValidity = now.plusSeconds(expireTime);
 
         return Jwts.builder()
                 .setClaims(claims) // 사용자 정보를 JWT에 넣음
+                .setId(jti) // jti 추가
                 .setIssuedAt(Date.from(now)) // JWT 발급 시간 (토큰 재사용 방지)
                 .setExpiration(Date.from(tokenValidity)) // JWT 만료 시간
                 .signWith(KEY, SignatureAlgorithm.HS256) // SHA-256 알고리즘으로 서명, KEY = 서버만 알고 있는 비밀 키
@@ -135,6 +137,11 @@ public class JwtUtil {
         byte[] bytes = new byte[64];
         RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    public String generateJTI() {
+
+        return UUID.randomUUID().toString();
     }
 
     /**

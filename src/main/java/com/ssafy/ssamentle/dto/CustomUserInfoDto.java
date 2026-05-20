@@ -10,6 +10,6 @@ public record CustomUserInfoDto(
         String email,
         String nickname,
         UserRole userRole,
-        String sessionId // SessionId(FamilyId)
+        String jti
 ) {
 }

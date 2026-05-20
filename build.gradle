@@ -25,6 +25,9 @@ dependencies {
 	/* Spring security */
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
+	/* Redis */
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 	/* Jwt */
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
