@@ -42,7 +42,11 @@ public enum ResponseCode {
     JWT_EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "JWT4011", "만료된 토큰입니다."),
     JWT_UNSUPPORTED_TOKEN(HttpStatus.UNAUTHORIZED, "JWT4012", "지원하지 않는 토큰입니다."),
     JWT_MALFORMED_TOKEN(HttpStatus.UNAUTHORIZED, "JWT4013", "잘못된 형식의 토큰입니다."),
-    JWT_MISSING_TOKEN(HttpStatus.UNAUTHORIZED, "JWT4014", "토큰이 존재하지 않습니다.");
+    JWT_MISSING_TOKEN(HttpStatus.UNAUTHORIZED, "JWT4014", "토큰이 존재하지 않습니다."),
+
+    // Redis Error
+    SESSION_NOT_FOUND(HttpStatus.UNAUTHORIZED, "SESSION401", "세션이 존재하지 않습니다."),
+    SESSION_REUSE_DETECTED(HttpStatus.UNAUTHORIZED, "SESSION4011", "토큰 재사용이 감지되어 세션이 만료되었습니다.");
 
     private final HttpStatus httpStatus;
     private final String code; // 클라이언트 식별용 코드 (예: "USER404"

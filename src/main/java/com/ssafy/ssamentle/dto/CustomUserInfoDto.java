@@ -9,7 +9,6 @@ public record CustomUserInfoDto(
         Long userId,
         String email,
         String nickname,
-        UserRole userRole,
-        String jti
+        UserRole userRole
 ) {
 }
