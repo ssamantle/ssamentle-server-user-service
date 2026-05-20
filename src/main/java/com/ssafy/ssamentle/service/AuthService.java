@@ -3,7 +3,6 @@ package com.ssafy.ssamentle.service;
 import com.ssafy.ssamentle.dto.*;
 import com.ssafy.ssamentle.error.ResponseCode;
 import com.ssafy.ssamentle.entity.User;
-import com.ssafy.ssamentle.error.exception.JwtHandler;
 import com.ssafy.ssamentle.error.exception.RedisHandler;
 import com.ssafy.ssamentle.error.exception.UserHandler;
 import com.ssafy.ssamentle.repository.UserRepository;
@@ -32,7 +31,7 @@ public class AuthService {
 
         final String email = signupRequestDto.email();
         final String password = signupRequestDto.password();
-        Boolean isExistUser = userRepository.existsByEmail(email);
+        final Boolean isExistUser = userRepository.existsByEmail(email);
 
         if (isExistUser) throw new UserHandler(ResponseCode.USER_ALREADY_EXISTS);
 
@@ -99,23 +98,23 @@ public class AuthService {
     public LoginResponseDto refresh(String refreshToken, String familyId) {
 
         // 클라이언트가 쿠키로 보낸 refreshToken을 hash로 변환.
-        String incomingRtHash = jwtUtil.generateSHA256Token(refreshToken);
+        final String incomingRtHash = jwtUtil.generateSHA256Token(refreshToken);
 
         // 1. 세션 조회 (Redis에 동일한 키가 있는지 확인)
-        RedisSessionDto sessionDto = Optional.ofNullable(
+        final RedisSessionDto sessionDto = Optional.ofNullable(
                 redisTemplate.opsForValue().get(RedisKeyNamingUtil.REFRESH_TOKEN_REDIS_KEY_NAME(familyId))
-        ).orElseThrow(() -> new JwtHandler(ResponseCode.SESSION_NOT_FOUND));
+        ).orElseThrow(() -> new RedisHandler(ResponseCode.SESSION_NOT_FOUND));
 
         // 2. 현재 RT 검증 (현재 유효한 해시인지 비교)
         // Refresh 되면 rtHash 값이 바뀐다. 즉, 이전 RefreshToken을 사용할 경우, 인증에 실패한다.
-        boolean isCurrentRt = sessionDto.rtHash().equals(incomingRtHash);
+        final boolean isCurrentRt = sessionDto.rtHash().equals(incomingRtHash);
 
         // 3. 이전 RT 검증 (overlap 허용)
         // 재사용 탐지: 새로운 토큰이 생성 되었는데, 이전 토큰이 사용됨
         // 네트워크 문제나 동시 refresh를 할 경우, 정상적인 접근에도 인증에 실패할 수 있다.
         // 조금의 오차를 허용해줘서 사용자 경험을 개선한다.
         boolean isPrevRt = false;
-        long now = Instant.now().getEpochSecond();
+        final long now = Instant.now().getEpochSecond();
         if (!isCurrentRt && sessionDto.prevRtHash() != null && sessionDto.rotatedAtEpoch() != null) {
 
             long secondsSinceRotation = now - sessionDto.rotatedAtEpoch();
@@ -133,20 +132,23 @@ public class AuthService {
         }
 
         // 5. 회전(새로운 RT 발급)
-        String newRefreshToken = jwtUtil.generateRefreshToken(); // 새로운 refreshToken 발급
-        String newRtHash = jwtUtil.generateSHA256Token(newRefreshToken); // 새로운 rtHash 발급
+        final String jti = jwtUtil.generateJTI();
+        final String newRefreshToken = jwtUtil.generateRefreshToken(); // 새로운 refreshToken 발급
+        final String newRtHash = jwtUtil.generateSHA256Token(newRefreshToken); // 새로운 rtHash 발급
 
         // AccessToken 생성용 User 정보 초기화
-        CustomUserInfoDto customUserInfoDto = CustomUserInfoDto.builder()
+        final CustomUserInfoDto customUserInfoDto = CustomUserInfoDto.builder()
                 .userId(sessionDto.customUserInfoDto().userId())
                 .email(sessionDto.customUserInfoDto().email())
+                .nickname(sessionDto.customUserInfoDto().nickname())
                 .userRole(sessionDto.customUserInfoDto().userRole())
                 .build();
 
         // Redis에 저장할 세션, RefreshToken 정보
-        RedisSessionDto newRedisSessionDto = RedisSessionDto.builder()
+        final RedisSessionDto newRedisSessionDto = RedisSessionDto.builder()
                 .customUserInfoDto(customUserInfoDto)
                 .rtHash(newRtHash)
+                .currentAccessJti(jti)
                 // 이전 RT 기록: overlap 요청이었으면 prevRtHash 유지, 정상 rotate면 현재 걸 prev로
                 .prevRtHash(isCurrentRt ? sessionDto.rtHash() : sessionDto.prevRtHash())
                 .rotatedAtEpoch(isCurrentRt ? now : sessionDto.rotatedAtEpoch()) // prevRt면 갱신 안 함
@@ -155,8 +157,7 @@ public class AuthService {
         // Redis에 새로운 세션 + refresh Token 저장
         redisTemplate.opsForValue().set(RedisKeyNamingUtil.REFRESH_TOKEN_REDIS_KEY_NAME(familyId), newRedisSessionDto, jwtUtil.getREFRESH_TTL());
 
-        final String jti = jwtUtil.generateJTI();
-        String newAccessToken = jwtUtil.createAccessToken(customUserInfoDto, jti, familyId); // 새로운 AccessToken 발급
+        final String newAccessToken = jwtUtil.createAccessToken(customUserInfoDto, jti, familyId); // 새로운 AccessToken 발급
         return LoginResponseDto.builder()
                 .refreshToken(newRefreshToken)
                 .accessToken(newAccessToken)
